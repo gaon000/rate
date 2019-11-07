@@ -14,6 +14,9 @@ func setupRouter() *gin.Engine {
 	r := gin.Default()
 
 	// Ping test
+	r.GET("/", func(c *gin.Context){
+		c.JSON(http.StatusOK, gin.H{"This page index":"main"})
+	})
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
 	})

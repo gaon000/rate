@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,6 +19,27 @@ func setupRouter() *gin.Engine {
 	r.HEAD("/someHead", someMethod)
 	r.OPTIONS("/someOptions", someMethod)
 
+	r.GET("/user/:name", func(c *gin.Context) {
+		name := c.Param("name")
+		message := name + " is very handsome!"
+		c.JSON(200, gin.H{"message": message})
+	})
+
+	r.GET("/user/:name/age/:old", func(c *gin.Context) {
+		name := c.Param("name")
+		age := c.Param("old")
+		message := name + " is " + age + " years old."
+		c.JSON(200, gin.H{"message": message})
+	})
+
+	r.GET("/colour/:colour/*fruits", func(c *gin.Context) {
+		color := c.Param("colour")
+		fruits := c.Param("fruits")
+		fruitArray := strings.Split(fruits, "/")
+		// remove the first element in fruit slice.
+		fruitArray = append(fruitArray[:0], fruitArray[1:]...)
+		c.JSON(200, gin.H{"color": color, "fruits": fruitArray})
+	})
 	return r
 }
 
