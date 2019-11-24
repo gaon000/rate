@@ -11,10 +11,11 @@ import (
 	"net/http"
 )
 
-type Trainer struct {
-	Name string
-	Age  int
-	City string
+type Officer struct {
+	Occupation string
+	Applicant  int32
+	Selected int32
+	Rate float32
 }
 
 var db = make(map[string]string)
@@ -24,6 +25,12 @@ func setupRouter() *gin.Engine {
 	// gin.DisableConsoleColor()
 	r := gin.Default()
 	//r.LoadHTMLGlob("practice/*")
+
+	r.GET("/nine", func(c *gin.Context) {
+		
+	}
+)
+
 	r.GET("/test", func(c *gin.Context) {
 		c.Request.URL.Path = "/test2"
 		r.HandleContext(c)
@@ -84,7 +91,7 @@ func main() {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
 	client, err := mongo.Connect(context.TODO(), clientOptions)
-
+	var result Officer
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,10 +101,14 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("connected")
-	collection := client.Database("test").Collection("trainers")
-	ash := Trainer{"Ash", 10, "pallet"}
-	insertR, err := collection.InsertOne(context.TODO(), ash)
-	fmt.Println(insertR.InsertedID)
+	collection_nine := client.Database("officer").Collection("nine")
+	collection_seven := client.Database("officer").Collection("seven")
+	collection_five := client.Database("officer").Collection("five")
+	err := collection_nine.FindOne(context.TODO()).Decode(&result)
+	if err != nil{
+		log.Fatal(err)
+	}
+	fmt.Println(result)
 
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
