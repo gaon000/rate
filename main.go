@@ -1,10 +1,21 @@
 package main
 
 import (
-	"net/http"
-
+	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	//	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
+	"net/http"
 )
+
+type Trainer struct {
+	Name string
+	Age  int
+	City string
+}
 
 var db = make(map[string]string)
 
@@ -12,10 +23,18 @@ func setupRouter() *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
+	//r.LoadHTMLGlob("practice/*")
+	r.GET("/test", func(c *gin.Context) {
+		c.Request.URL.Path = "/test2"
+		r.HandleContext(c)
+	})
+	r.GET("/test2", func(c *gin.Context) {
+		c.JSON(200, gin.H{"hello": "world"})
+	})
 
 	// Ping test
-	r.GET("/", func(c *gin.Context){
-		c.JSON(http.StatusOK, gin.H{"This page index":"main"})
+	r.GET("/", func(c *gin.Context) {
+
 	})
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
@@ -62,6 +81,24 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("connected")
+	collection := client.Database("test").Collection("trainers")
+	ash := Trainer{"Ash", 10, "pallet"}
+	insertR, err := collection.InsertOne(context.TODO(), ash)
+	fmt.Println(insertR.InsertedID)
+
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")

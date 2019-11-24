@@ -1,9 +1,14 @@
 import xml.etree.ElementTree as elemtree
-tree = elemtree.parse("nine.xml")
+import pymongo
+conn = pymongo.MongoClient("localhost",27017)
+db = conn.officer
+collection_nine = db.nine
+collection_seven = db.seven
+collection_five = db.five
+
+tree = elemtree.parse("seven.xml")
 root = tree.getroot()
+
 for i in root.iter('Row'):
-    print("="*60)
-    print(f"모집단위 = {i.findtext('모집단위')}")
-    print(f"접수인원 = {i.findtext('접수인원')}")
-    print(f"선발예정인원 = {i.findtext('선발예정인원')}")
-    print(f"경쟁률 = {i.findtext('경쟁률')}")
+	collection_seven.insert({"occupation":i.findtext('모집단위'),"applicant":i.findtext('접수인원'),"selected":i.findtext('선발예정인원'),"rate":i.findtext('경쟁률')})
+
