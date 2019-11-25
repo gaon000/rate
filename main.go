@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func ReturnAll(client *mongo.Client, filter bson.M) []*Officer {
@@ -48,15 +47,20 @@ type Officer struct {
 
 var db = make(map[string]string)
 
-func setupRouter() *gin.Engine {
+func setupRouter(mc *mongo.Client) *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
 	//r.LoadHTMLGlob("practice/*")
 
-	/*r.GET("/nine", func(c *gin.Context) {
-
-	}*/
+	r.GET("/nine", func(c *gin.Context) {
+		var a []string
+		officers := ReturnAll(mc, bson.M{})
+		for _, officer := range officers {
+			a = append(a, officer.Occupation, officer.Applicant, officer.Selected, officer.Rate)
+		}
+		c.JSON(200, a)
+	})
 
 	r.GET("/test", func(c *gin.Context) {
 		c.Request.URL.Path = "/test2"
@@ -129,19 +133,16 @@ func GetClient() *mongo.Client {
 
 func main() {
 	c := GetClient()
-	err := c.Ping(context.Background(), readpref.Primary())
-	if err != nil {
-		log.Fatal("couldn't connect to db", err)
-	} else {
-		log.Println("connected")
-	}
+	// err := c.Ping(context.Background(), readpref.Primary())
+	// if err != nil {
+	// log.Fatal("couldn't connect to db", err)
+	// } else {
+	// log.Println("connected")
+	// }
 	// findOptions := options.Find()
 	// findOptions.SetLimit(2)
 	// collection = client.Database("test").Collection("trainers")
-	officers := ReturnAll(c, bson.M{})
-	for _, officer := range officers {
-		log.Println(officer.Occupation, officer.Applicant, officer.Selected, officer.Rate)
-	}
+	// }
 	// collection_nine := client.Database("officer").Collection("nine")
 	// collection_seven := client.Database("officer").Collection("seven")
 	// collection_five := client.Database("officer").Collection("five")
@@ -160,7 +161,7 @@ func main() {
 	// cur.Close(context.TODO())
 	// fmt.Printf("%+v\n", result)
 
-	r := setupRouter()
+	r := setupRouter(c)
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
 }
