@@ -2,21 +2,49 @@ package main
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/gin-gonic/gin"
-	//	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+
 	"log"
 	"net/http"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type Officer struct {
-	Occupation string
-	Applicant  int32
-	Selected int32
-	Rate float32
+func ReturnAll(client *mongo.Client, filter bson.M) []*Officer {
+	var officers []*Officer
+	collection := client.Database("officer").Collection("five")
+	cur, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		log.Fatal("err on finding document", err)
+	}
+	for cur.Next(context.TODO()) {
+		var officer Officer
+		err = cur.Decode(&officer)
+		if err != nil {
+			log.Fatal("err on decoding doc", err)
+		}
+		officers = append(officers, &officer)
+	}
+	return officers
 }
+
+type Officer struct {
+	Occupation string "json:'occupation'"
+	Applicant  string "json:'applicant'"
+	Selected   string "json:'selected'"
+	Rate       string "json:'rate'"
+}
+
+/*type Trainer struct {
+    Name string
+    Age  int
+    City string
+}
+*/
 
 var db = make(map[string]string)
 
@@ -26,10 +54,9 @@ func setupRouter() *gin.Engine {
 	r := gin.Default()
 	//r.LoadHTMLGlob("practice/*")
 
-	r.GET("/nine", func(c *gin.Context) {
-		
-	}
-)
+	/*r.GET("/nine", func(c *gin.Context) {
+
+	}*/
 
 	r.GET("/test", func(c *gin.Context) {
 		c.Request.URL.Path = "/test2"
@@ -87,28 +114,51 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
-func main() {
+func GetClient() *mongo.Client {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	var result Officer
+	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	err = client.Ping(context.TODO(), nil)
+	err = client.Connect(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("connected")
-	collection_nine := client.Database("officer").Collection("nine")
-	collection_seven := client.Database("officer").Collection("seven")
-	collection_five := client.Database("officer").Collection("five")
-	err := collection_nine.FindOne(context.TODO()).Decode(&result)
-	if err != nil{
-		log.Fatal(err)
+	return client
+}
+
+func main() {
+	c := GetClient()
+	err := c.Ping(context.Background(), readpref.Primary())
+	if err != nil {
+		log.Fatal("couldn't connect to db", err)
+	} else {
+		log.Println("connected")
 	}
-	fmt.Println(result)
+	// findOptions := options.Find()
+	// findOptions.SetLimit(2)
+	// collection = client.Database("test").Collection("trainers")
+	officers := ReturnAll(c, bson.M{})
+	for _, officer := range officers {
+		log.Println(officer.Occupation, officer.Applicant, officer.Selected, officer.Rate)
+	}
+	// collection_nine := client.Database("officer").Collection("nine")
+	// collection_seven := client.Database("officer").Collection("seven")
+	// collection_five := client.Database("officer").Collection("five")
+	// cur, err := collection_nine.Find(context.TODO(), bson.D{{}}, findOptions)
+	// if err != nil {
+	// log.Fatal(err)
+	// }
+	// for cur.Next(context.TODO()) {
+	// var elem Officer
+	// err := cur.Decode(&elem)
+	// if err != nil {
+	// log.Fatal(err)
+	// }
+	// result = append(result, &elem)
+	// }
+	// cur.Close(context.TODO())
+	// fmt.Printf("%+v\n", result)
 
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
