@@ -1,0 +1,79 @@
+<html>
+    <head></head>
+    <body>
+        <h1 id = "class">no</h1>
+
+        <div id = "five" style = "position: absolute; left: 220px; top:250px;">
+            <h1>five</h1>
+        </div>
+        <div id = "seven" style="position: absolute; left: 420px; top: 250px;">
+            <h1>seven</h1>
+        </div>
+        <div id = "nine" style="position: absolute; left: 620px; top: 250px;">
+            <h1>nine</h1>
+        </div>
+        <div id = "key"style="position: absolute; left: 20px; top: 250px;">
+            <h1>ddd</h1>
+        </div>
+        <div style="position: absolute; left: 220px; top: 250px;">
+        </div>
+        <script src ="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"></script>
+        <script>
+            (async function() {
+                    const key = document.getElementById('key');
+                    const five = document.getElementById('five');
+                    const seven = document.getElementById('seven');
+                    const nine = document.getElementById('nine');
+                    let addr = "http://127.0.0.1:8080"
+                    let res = await axios.get(addr+"/officer");
+                    document.getElementById('class').innerText =res.data;
+                    let res_data = res.data;
+                    
+
+                    (async function(){
+                        console.log(addr+"/"+res_data[0])
+                        let res0 = await axios.get(addr+"/"+res_data[0])
+                        let res1 = await axios.get(addr+"/"+res_data[1])
+                        let res2 = await axios.get(addr+"/"+res_data[2])
+                        let j = 0;
+                        for(let i = 0; i<res0.data.length; i++){
+                            if(j == 0){
+                                let ke = document.createElement('div')
+                                ke.innerText="모집단위"
+                                key.appendChild(ke)
+                                j++
+                            }
+                            else if(j==1){
+                                let ke = document.createElement('div')
+                                ke.innerText="접수인원"
+                                key.appendChild(ke)
+                                j++
+                            }
+                            else if(j==2){
+                                let ke = document.createElement('div')
+                                ke.innerText ="선발 예정 인원"
+                                key.appendChild(ke)
+                                j++
+                            }
+                            else if(j == 3){
+                                let ke = document.createElement('div')
+                                ke.innerText = "경쟁률"
+                                key.appendChild(ke)
+                                j=0
+                            }
+                            let el0 = document.createElement('div');
+                            el0.innerText = res0.data[i];
+                            five.appendChild(el0);
+                            let el1 = document.createElement('div');
+                            el1.innerText = res1.data[i];
+                            seven.appendChild(el1)
+                            let el2 = document.createElement('div');
+                            el2.innerText=res2.data[i];
+                            nine.appendChild(el2)
+                        }
+                    })()
+                }
+            )()
+        </script>
+    </body>
+</html>
